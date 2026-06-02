@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>★ Rhythm Star ★</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#08001a;}
+body{color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;user-select:none;-webkit-user-select:none;}
+#app{width:100%;height:100%;position:relative;}
+.star{position:absolute;border-radius:50%;background:#fff;pointer-events:none;}
+@keyframes twinkle{0%,100%{opacity:.06}50%{opacity:.8}}
+#menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:16px 12px 12px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#1a003a,#08001a 70%);}
+.gtitle{text-align:center;margin-bottom:10px;flex-shrink:0;}
+.gtitle h1{font-size:clamp(20px,5vw,30px);font-weight:900;background:linear-gradient(135deg,#ff6b9d,#c084fc,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;}
+.gtitle p{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:4px;margin-top:2px;}
+.ftabs{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;flex-shrink:0;}
+.ftab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.4);cursor:pointer;font-family:inherit;}
+.ftab.on{border-color:#ff6b9d;color:#fff;background:rgba(255,107,157,.2);}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;overflow-y:auto;flex:1;min-height:0;padding-bottom:4px;}
+.sgrid::-webkit-scrollbar{width:3px;}.sgrid::-webkit-scrollbar-thumb{background:#ff6b9d;border-radius:2px;}
+.sc{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 6px;cursor:pointer;text-align:center;position:relative;overflow:hidden;transition:all .15s;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c1),var(--c2));}
+.sc.sel{border-color:#ff6b9d;background:rgba(255,107,157,.13);}
+.sc:active{transform:scale(.95);}
+.sc-ico{font-size:18px;margin-bottom:3px;}
+.sc-name{font-size:9px;font-weight:700;color:#fff;line-height:1.3;}
+.sc-art{font-size:7.5px;color:rgba(255,255,255,.35);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sc-bpm{font-size:8px;color:rgba(255,255,255,.25);margin-top:2px;}
+.sc-tag{display:inline-block;font-size:7.5px;padding:1px 4px;border-radius:6px;margin-top:2px;font-weight:700;background:rgba(255,107,157,.2);color:#ff9dc0;}
+.bpanel{width:100%;flex-shrink:0;margin-top:8px;}
+.drow{display:flex;gap:4px;justify-content:center;margin-bottom:7px;flex-wrap:wrap;}
+.db{padding:4px 10px;border-radius:20px;border:1.5px solid;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;}
+.db[data-d=easy]{border-color:#4ade80;color:#4ade80;background:rgba(74,222,128,.08);}
+.db[data-d=normal]{border-color:#00d4ff;color:#00d4ff;background:rgba(0,212,255,.08);}
+.db[data-d=hard]{border-color:#ffd700;color:#ffd700;background:rgba(255,215,0,.08);}
+.db[data-d=expert]{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,.08);}
+.db[data-d=master]{border-color:#9b5cf6;color:#9b5cf6;background:rgba(155,92,246,.08);}
+.db.on{filter:brightness(1.5);}
+.db[data-d=easy].on{background:rgba(74,222,128,.28);}
+.db[data-d=normal].on{background:rgba(0,212,255,.28);}
+.db[data-d=hard].on{background:rgba(255,215,0,.28);}
+.db[data-d=expert].on{background:rgba(255,107,157,.28);}
+.db[data-d=master].on{background:rgba(155,92,246,.28);}
+.playbtn{width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#ff6b9d,#c084fc);color:#fff;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:2px;font-family:inherit;box-shadow:0 4px 20px rgba(255,107,157,.35);}
+.playbtn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none;}
+.playbtn:not(:disabled):active{transform:scale(.97);}
+#game{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:100;display:none;flex-direction:column;}
+#game.on{display:flex;}
+.ghud{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(0,0,0,.7);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.05);}
+.hs{font-size:22px;font-weight:900;min-width:100px;letter-spacing:1px;}
+.hc{font-size:10px;color:rgba(255,255,255,.45);text-align:center;}
+.hc b{font-size:26px;font-weight:900;color:#ffd700;display:block;line-height:1.1;}
+.hi{font-size:9px;color:rgba(255,255,255,.35);text-align:right;max-width:130px;}
+.hi strong{font-size:11px;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pbar{height:4px;background:rgba(255,255,255,.07);flex-shrink:0;}
+.pbfill{height:100%;background:linear-gradient(90deg,#00d4ff,#ff6b9d);width:0%;}
+#lw{flex:1;position:relative;overflow:hidden;background:#08001a;}
+#cv{position:absolute;top:0;left:0;display:block;}
+.pausebtn{position:absolute;top:10px;right:12px;z-index:20;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);padding:6px 12px;font-size:11px;cursor:pointer;border-radius:8px;font-family:inherit;}
+#pov{position:absolute;inset:0;background:rgba(0,0,0,.85);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#pov.on{display:flex;}
+.povt{font-size:30px;font-weight:900;margin-bottom:8px;letter-spacing:4px;}
+.povb{padding:12px 36px;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-width:180px;text-align:center;}
+.povb:active{background:rgba(255,255,255,.2);}
+#result{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 30%,#180030,#000 70%);}
+#result.on{display:flex;}
+.rt{font-size:13px;font-weight:900;letter-spacing:8px;color:rgba(255,255,255,.35);margin-bottom:8px;}
+.rg{font-size:78px;font-weight:900;line-height:1;margin-bottom:12px;}
+@keyframes gg{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5) drop-shadow(0 0 18px currentColor)}}
+.rg{animation:gg 2s ease-in-out infinite;}
+.rsong{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:10px;text-align:center;}
+.rcard{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px 28px;margin-bottom:16px;text-align:center;min-width:250px;}
+.rscore{font-size:38px;font-weight:900;letter-spacing:2px;}
+.rlabel{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+.rdet{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
+.rdi label{font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;display:block;margin-bottom:2px;}
+.rdi .v{font-size:20px;font-weight:700;}
+.vp{color:#ffd700;}.vg{color:#00d4ff;}.vm{color:#ff6b9d;}
+.rbtns{display:flex;gap:10px;}
+.rb{padding:11px 22px;border-radius:10px;border:1.5px solid;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}
+.rb.re{border-color:#00d4ff;color:#00d4ff;background:rgba(0,212,255,.08);}
+.rb.rb2{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,.08);}
+.rb:active{filter:brightness(1.3);}
+.tfb{position:fixed;font-size:14px;font-weight:900;pointer-events:none;z-index:9999;animation:fbf .5s ease-out forwards;text-shadow:0 0 10px currentColor;}
+@keyframes fbf{0%{opacity:1;transform:translateY(0) scale(.9)}20%{opacity:1;transform:translateY(-8px) scale(1.2)}100%{opacity:0;transform:translateY(-44px) scale(1)}}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="stars" style="position:fixed;inset:0;pointer-events:none;z-index:0;"></div>
+<div id="menu">
+  <div class="gtitle"><h1>★ RHYTHM STAR ★</h1><p>PURE MUSIC GAME</p></div>
+  <div class="ftabs" id="ftabs">
+    <button class="ftab on" data-c="all">全部</button>
+    <button class="ftab" data-c="vocaloid">VOCALOID</button>
+    <button class="ftab" data-c="anime">动漫</button>
+    <button class="ftab" data-c="jpop">J-POP</button>
+  </div>
+  <div class="sgrid" id="sg"></div>
+  <div class="bpanel">
+    <div class="drow" id="drow">
+      <button class="db" data-d="easy">EASY</button>
+      <button class="db" data-d="normal">NORMAL</button>
+      <button class="db on" data-d="hard">HARD</button>
+      <button class="db" data-d="expert">EXPERT</button>
+      <button class="db" data-d="master">MASTER</button>
+    </div>
+    <button class="playbtn" id="pb" disabled>请选择歌曲</button>
+  </div>
+</div>
+<div id="game">
+  <div class="ghud">
+    <div class="hs" id="hs">0</div>
+    <div class="hc"><b id="hc">0</b>COMBO</div>
+    <div class="hi"><strong id="ht">-</strong><span id="ha">-</span></div>
+  </div>
+  <div class="pbar"><div class="pbfill" id="pf"></div></div>
+  <div id="lw">
+    <canvas id="cv"></canvas>
+    <button class="pausebtn" onclick="pauseGame()">⏸ PAUSE</button>
+    <div id="pov">
+      <div class="povt">PAUSED</div>
+      <button class="povb" onclick="resumeGame()">▶ 继续</button>
+      <button class="povb" onclick="quitGame()">✕ 退出</button>
+    </div>
+  </div>
+</div>
+<div id="result">
+  <div class="rt">R E S U L T</div>
+  <div class="rg" id="rg">S</div>
+  <div class="rsong" id="rsong"></div>
+  <div class="rcard">
+    <div class="rscore" id="rs">0</div>
+    <div class="rlabel">SCORE</div>
+    <div class="rdet">
+      <div class="rdi"><label>PERFECT</label><div class="v vp" id="rp">0</div></div>
+      <div class="rdi"><label>GREAT</label><div class="v vg" id="rgt">0</div></div>
+      <div class="rdi"><label>MISS</label><div class="v vm" id="rm">0</div></div>
+    </div>
+  </div>
+  <div class="rbtns">
+    <button class="rb re" onclick="retryGame()">↺ 重试</button>
+    <button class="rb rb2" onclick="backMenu()">← 返回</button>
+  </div>
+</div>
+</div>
+<script>
+// ================================================================
+// AUDIO ENGINE
+// ================================================================
+var AC=null, musicSrc=[];
+function initAC(){ if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended')AC.resume(); }
+function stopMusic(){ musicSrc.forEach(function(s){try{s.stop();}catch(e){}}); musicSrc=[]; }
+
+var C4=261.63,Db4=277.18,D4=293.66,Eb4=311.13,E4=329.63,F4=349.23,
+    Gb4=369.99,G4=392,Ab4=415.3,A4=440,Bb4=466.16,B4=493.88;
+function oc(f,n){ return f*Math.pow(2,n||0); }
+
+function mTone(f,t,dur,vol,type,atk,rel){
+  if(!AC)return;
+  var o=AC.createOscillator(),g=AC.createGain();
+  o.type=type||'sine'; o.frequency.value=f;
+  atk=atk||0.008; rel=rel||0.06;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vol,t+atk);
+  g.gain.setValueAtTime(vol,t+dur-rel);
+  g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g);g.connect(AC.destination);
+  o.start(t);o.stop(t+dur+0.02);
+  musicSrc.push(o);
+}
+function mNoise(t,dur,vol,hp){
+  if(!AC)return;
+  var len=Math.ceil(AC.sampleRate*Math.max(dur,0.02));
+  var buf=AC.createBuffer(1,len,AC.sampleRate);
+  var d=buf.getChannelData(0);
+  for(var i=0;i<len;i++)d[i]=(Math.random()*2-1);
+  var src=AC.createBufferSource(); src.buffer=buf;
+  var hpf=AC.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=hp||4000;
+  var g=AC.createGain();
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  src.connect(hpf);hpf.connect(g);g.connect(AC.destination);
+  src.start(t);src.stop(t+dur+0.02);
+  musicSrc.push(src);
+}
+function kick(t,v){ if(!AC)return; var o=AC.createOscillator(),g=AC.createGain(); o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(40,t+0.18); g.gain.setValueAtTime(v||0.85,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.28); o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+0.32);musicSrc.push(o); }
+function snare(t,v){ mNoise(t,0.13,v||0.32,2000); }
+function hh(t,v,open){ mNoise(t,open?0.16:0.04,v||0.11,9000); }
+function bass(f,t,dur,v){ mTone(f*0.5,t,dur,v||0.38,'sawtooth',0.01,0.05); }
+function lead(f,t,dur,v){ mTone(f,t,dur,v||0.20,'triangle',0.015,0.07); }
+function pad(fs,t,dur,v){ fs.forEach(function(f){mTone(f,t,dur,(v||0.09)/fs.length,'sine',0.08,0.15);}); }
+function pluck(f,t,dur,v){ mTone(f,t,dur,v||0.17,'square',0.003,0.04); }
+
+// ================================================================
+// CHART BUILDER — beats are quarter notes, lane 0-3
+// ================================================================
+function b2ms(beat,bpm){ return beat*(60000/bpm); }
+
+// Generate harder charts by interpolating
+function hardenChart(easy, factor){
+  // factor: how many extra notes to insert between pairs
+  var out=[];
+  easy.forEach(function(p){ out.push([p[0],p[1]]); });
+  for(var i=0;i<easy.length-1;i++){
+    var gap=easy[i+1][0]-easy[i][0];
+    if(gap>=factor){
+      for(var f=factor;f<gap;f+=factor){
+        out.push([easy[i][0]+f, (easy[i][1]+2)%4]);
+      }
+    }
+  }
+  out.sort(function(a,b){return a[0]-b[0];});
+  return out;
+}
+
+function chartMs(pat,bpm,leadInMs){
+  var li=leadInMs||0;
+  return pat.map(function(p){
+    return {time:b2ms(p[0],bpm)+li, lane:p[1], type:0, holdDur:0, hit:false, missed:false, y:-50};
+  });
+}
+
+// ================================================================
+// SONGS
+// ================================================================
+var SONGS=[];
+
+// ---- 1. Bad Apple!! 138bpm ----
+(function(){
+  var bpm=138;
+  // Easy chart: one note per beat, alternating lanes
+  var easy=[];
+  var laneSeq=[1,2,0,3,2,1,3,0,1,3,0,2,3,1,2,0];
+  for(var i=0;i<96;i++) easy.push([i, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.5);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.25);
+
+  SONGS.push({id:1,t:'Bad Apple!!',a:'Nomico',cat:'vocaloid',ico:'🍎',c1:'#cc2200',c2:'#550000',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(A4,0),oc(C4,0),oc(E4,0),oc(A4,0), oc(G4,0),oc(B4,0),oc(D4,0),oc(G4,0),
+               oc(F4,0),oc(A4,0),oc(C4,0),oc(F4,0), oc(E4,0),oc(Ab4,0),oc(B4,0),oc(E4,0)];
+      var basses=[oc(A4,-2),oc(G4,-2),oc(F4,-2),oc(E4,-2)];
+      var pads=[[oc(A4,-1),oc(C4,0),oc(E4,0)],[oc(G4,-1),oc(B4,-1),oc(D4,0)],[oc(F4,-1),oc(A4,-1),oc(C4,0)],[oc(E4,-1),oc(Ab4,-1),oc(B4,-1)]];
+      for(var bar=0;bar<72;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.80);kick(t+b*2,0.68);
+        snare(t+b,0.30);snare(t+b*3,0.30);
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,0.10,h===4);
+        bass(basses[ci],t,b*1.9,0.36);bass(basses[ci],t+b*2,b*1.9,0.30);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.09);
+        for(var n=0;n<8;n++) lead(mel[(bar*8+n)%16],t+n*b*0.5,b*0.44,n%2===0?0.19:0.12);
+      }
+    }
+  });
+})();
+
+// ---- 2. id;smile 145bpm ----
+(function(){
+  var bpm=145;
+  var easy=[];
+  var laneSeq=[0,2,1,3,0,3,2,1,1,0,3,2,2,3,0,1];
+  for(var i=0;i<96;i++) easy.push([i, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.5);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.25);
+
+  SONGS.push({id:2,t:'id;smile',a:'SEKAI feat. Hatsune Miku',cat:'vocaloid',ico:'😊',c1:'#ff6b9d',c2:'#c084fc',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(E4,0),oc(Gb4,0),oc(G4,0),oc(B4,0), oc(A4,0),oc(G4,0),oc(E4,0),oc(Db4,0),
+               oc(D4,0),oc(E4,0),oc(Gb4,0),oc(A4,0), oc(G4,0),oc(Gb4,0),oc(E4,0),oc(D4,0)];
+      var basses=[oc(C4,-2),oc(G4,-2),oc(A4,-2),oc(E4,-2)];
+      var pads=[[oc(C4,-1),oc(E4,-1),oc(G4,-1)],[oc(G4,-2),oc(B4,-1),oc(D4,0)],[oc(A4,-2),oc(C4,-1),oc(E4,-1)],[oc(E4,-2),oc(Ab4,-2),oc(B4,-1)]];
+      for(var bar=0;bar<72;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.82);kick(t+b*1.5,0.48);kick(t+b*2.5,0.58);kick(t+b*3,0.48);
+        snare(t+b,0.33);snare(t+b*3,0.33);
+        for(var h=0;h<16;h++) hh(t+h*b*0.25,h%4===0?0.13:0.07,h%8===4);
+        bass(basses[ci],t,b*1.8,0.36);bass(basses[ci],t+b*2,b*1.8,0.30);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.09);
+        for(var n=0;n<8;n++) pluck(mel[(bar*8+n)%16],t+n*b*0.5,b*0.40,n%2===0?0.20:0.13);
+      }
+    }
+  });
+})();
+
+// ---- 3. Peaky Peaky 180bpm ----
+(function(){
+  var bpm=180;
+  var easy=[];
+  var laneSeq=[1,3,0,2,0,2,1,3,2,0,3,1,3,1,2,0];
+  for(var i=0;i<112;i++) easy.push([i*0.5, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.25);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.125);
+
+  SONGS.push({id:3,t:'Peaky Peaky',a:'Peaky P-key',cat:'vocaloid',ico:'⚡',c1:'#fbbf24',c2:'#f97316',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(E4,0),oc(E4,0),oc(G4,0),oc(A4,0), oc(B4,0),oc(A4,0),oc(G4,0),oc(E4,0),
+               oc(Db4,0),oc(E4,0),oc(Gb4,0),oc(A4,0), oc(G4,0),oc(E4,0),oc(Db4,0),oc(B4,-1)];
+      var basses=[oc(E4,-2),oc(A4,-2),oc(Db4,-1),oc(B4,-2)];
+      var pads=[[oc(E4,-1),oc(Ab4,-1),oc(B4,-1)],[oc(A4,-2),oc(Db4,-1),oc(E4,-1)],[oc(Db4,-1),oc(E4,-1),oc(Ab4,-1)],[oc(B4,-2),oc(Db4,-1),oc(E4,-1)]];
+      for(var bar=0;bar<80;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.86);kick(t+b,0.58);kick(t+b*2,0.80);kick(t+b*3,0.52);
+        snare(t+b,0.38);snare(t+b*3,0.38);
+        if(bar%4===2){snare(t+b*1.5,0.22);snare(t+b*2.5,0.22);}
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,0.12,h===2||h===6);
+        bass(basses[ci],t,b*1.8,0.40);bass(basses[ci],t+b*2,b*1.7,0.34);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.08);
+        for(var n=0;n<8;n++) lead(mel[(bar*8+n)%16],t+n*b*0.5,b*0.40,n%2===0?0.19:0.12);
+        // arp
+        var arp=[oc(E4,0),oc(Ab4,0),oc(B4,0),oc(Db4,1)];
+        for(var a=0;a<4;a++) pluck(arp[a],t+a*b,b*0.28,0.08);
+      }
+    }
+  });
+})();
+
+// ---- 4. 初音ミクの消失 240bpm ----
+(function(){
+  var bpm=240;
+  var easy=[];
+  var laneSeq=[1,3,0,2,3,1,2,0,0,2,1,3,2,0,3,1];
+  for(var i=0;i<120;i++) easy.push([i*0.5, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.25);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.125);
+
+  SONGS.push({id:4,t:'初音ミクの消失',a:'cosMo@暴走P',cat:'vocaloid',ico:'🎤',c1:'#00d4ff',c2:'#0891b2',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(B4,0),oc(A4,0),oc(G4,0),oc(Gb4,0), oc(E4,0),oc(Gb4,0),oc(G4,0),oc(A4,0),
+               oc(D4,1),oc(B4,0),oc(A4,0),oc(G4,0), oc(Gb4,0),oc(E4,0),oc(Db4,0),oc(B4,-1)];
+      var basses=[oc(B4,-2),oc(G4,-2),oc(E4,-2),oc(Db4,-1)];
+      var pads=[[oc(B4,-2),oc(D4,-1),oc(Gb4,-1)],[oc(G4,-2),oc(B4,-2),oc(D4,-1)],[oc(E4,-2),oc(Ab4,-2),oc(B4,-2)],[oc(Db4,-1),oc(E4,-1),oc(Ab4,-1)]];
+      for(var bar=0;bar<96;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.86);kick(t+b,0.52);kick(t+b*2,0.80);kick(t+b*3,0.52);
+        snare(t+b,0.36);snare(t+b*3,0.36);snare(t+b*1.5,0.18);snare(t+b*3.5,0.18);
+        for(var h=0;h<16;h++) hh(t+h*b*0.25,0.08);
+        bass(basses[ci],t,b*1.7,0.38);bass(basses[ci],t+b*2,b*1.7,0.33);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.08);
+        for(var n=0;n<16;n++) lead(mel[(bar*16+n)%16],t+n*b*0.25,b*0.22,n%4===0?0.17:0.09);
+      }
+    }
+  });
+})();
+
+// ---- 5. 炎 103bpm ----
+(function(){
+  var bpm=103;
+  var easy=[];
+  var laneSeq=[1,2,0,3,2,1,3,0,1,3,2,0,3,0,1,2];
+  for(var i=0;i<80;i++) easy.push([i, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.5);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.25);
+
+  SONGS.push({id:5,t:'炎',a:'LiSA (鬼滅の刃)',cat:'anime',ico:'🔥',c1:'#ef4444',c2:'#f97316',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(F4,0),oc(Ab4,0),oc(C4,1),oc(Bb4,0), oc(Ab4,0),oc(F4,0),oc(Eb4,0),oc(F4,0),
+               oc(Db4,0),oc(F4,0),oc(Ab4,0),oc(Bb4,0), oc(C4,1),oc(Bb4,0),oc(Ab4,0),oc(G4,0)];
+      var basses=[oc(F4,-2),oc(Eb4,-2),oc(Db4,-2),oc(C4,-2)];
+      var pads=[[oc(F4,-1),oc(Ab4,-1),oc(C4,0)],[oc(Eb4,-2),oc(G4,-1),oc(Bb4,-1)],[oc(Db4,-2),oc(F4,-1),oc(Ab4,-1)],[oc(C4,-2),oc(Eb4,-1),oc(G4,-1)]];
+      for(var bar=0;bar<66;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.80);kick(t+b*2.5,0.58);
+        snare(t+b,0.32);snare(t+b*3,0.32);
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,h%2===0?0.11:0.06,h===4);
+        bass(basses[ci],t,b*1.9,0.38);bass(basses[ci],t+b*2,b*1.9,0.32);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.10);
+        for(var n=0;n<8;n++) mTone(mel[(bar*8+n)%16],t+n*b*0.5,b*0.50,n%2===0?0.19:0.12,'triangle',0.02,0.09);
+      }
+    }
+  });
+})();
+
+// ---- 6. うっせぇわ 188bpm ----
+(function(){
+  var bpm=188;
+  var easy=[];
+  var laneSeq=[2,0,3,1,0,3,1,2,1,3,0,2,3,2,0,1];
+  for(var i=0;i<100;i++) easy.push([i*0.5, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.25);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.125);
+
+  SONGS.push({id:6,t:'うっせぇわ',a:'Ado',cat:'jpop',ico:'💥',c1:'#f43f5e',c2:'#7f1d1d',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(F4,0),oc(Eb4,0),oc(Db4,0),oc(C4,0), oc(Bb4,-1),oc(C4,0),oc(Db4,0),oc(Eb4,0),
+               oc(Ab4,-1),oc(Bb4,-1),oc(C4,0),oc(Db4,0), oc(Eb4,0),oc(Db4,0),oc(C4,0),oc(Bb4,-1)];
+      var basses=[oc(F4,-2),oc(Db4,-2),oc(Eb4,-2),oc(C4,-2)];
+      var pads=[[oc(F4,-1),oc(Ab4,-1),oc(C4,0)],[oc(Db4,-2),oc(F4,-1),oc(Ab4,-1)],[oc(Eb4,-2),oc(G4,-1),oc(Bb4,-1)],[oc(C4,-2),oc(Eb4,-1),oc(G4,-1)]];
+      for(var bar=0;bar<76;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.88);kick(t+b*0.75,0.42);kick(t+b*2,0.82);kick(t+b*3,0.48);
+        snare(t+b,0.38);snare(t+b*3,0.38);
+        if(bar%2===0){snare(t+b*1.5,0.20);snare(t+b*3.5,0.20);}
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,h%2===0?0.13:0.08);
+        bass(basses[ci],t,b*1.8,0.40);bass(basses[ci],t+b*2,b*1.8,0.34);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.09);
+        for(var n=0;n<8;n++) pluck(mel[(bar*8+n)%16],t+n*b*0.5,b*0.40,n%2===0?0.18:0.11);
+      }
+    }
+  });
+})();
+
+// ---- 7. Giorno's Theme 100bpm ----
+(function(){
+  var bpm=100;
+  var easy=[];
+  var laneSeq=[1,2,0,3,1,3,2,0,2,0,3,1,0,1,2,3];
+  for(var i=0;i<64;i++) easy.push([i, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.5);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.25);
+
+  SONGS.push({id:7,t:"Giorno's Theme",a:'菅野祐悟 (黄金之风)',cat:'anime',ico:'💛',c1:'#eab308',c2:'#ca8a04',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(Db4,0),oc(F4,0),oc(Ab4,0),oc(Db4,1), oc(C4,1),oc(Bb4,0),oc(Ab4,0),oc(F4,0),
+               oc(Eb4,0),oc(Ab4,0),oc(C4,1),oc(Eb4,1), oc(Db4,1),oc(C4,1),oc(Bb4,0),oc(Ab4,0)];
+      var basses=[oc(Db4,-2),oc(Ab4,-2),oc(Eb4,-2),oc(Bb4,-2)];
+      var pads=[[oc(Db4,-1),oc(F4,-1),oc(Ab4,-1)],[oc(Ab4,-2),oc(C4,-1),oc(Eb4,-1)],[oc(Eb4,-2),oc(Ab4,-2),oc(C4,-1)],[oc(Bb4,-2),oc(Db4,-1),oc(F4,-1)]];
+      for(var bar=0;bar<60;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.76);kick(t+b*2,0.64);
+        snare(t+b,0.28);snare(t+b*3,0.28);
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,h%2===0?0.09:0.05,h===4);
+        bass(basses[ci],t,b*1.9,0.36);bass(basses[ci],t+b*2,b*1.9,0.30);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.11);
+        for(var n=0;n<8;n++) mTone(mel[(bar*8+n)%16],t+n*b*0.5,b*0.55,n%2===0?0.21:0.13,'triangle',0.03,0.10);
+      }
+    }
+  });
+})();
+
+// ---- 8. 夜に駆ける 130bpm ----
+(function(){
+  var bpm=130;
+  var easy=[];
+  var laneSeq=[0,3,1,2,2,0,3,1,1,2,0,3,3,1,2,0];
+  for(var i=0;i<88;i++) easy.push([i, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.5);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.25);
+
+  SONGS.push({id:8,t:'夜に駆ける',a:'YOASOBI',cat:'jpop',ico:'🌃',c1:'#0ea5e9',c2:'#1e3a8a',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(A4,0),oc(B4,0),oc(Db4,1),oc(E4,1), oc(Db4,1),oc(B4,0),oc(A4,0),oc(Gb4,0),
+               oc(E4,0),oc(Gb4,0),oc(A4,0),oc(B4,0), oc(Db4,1),oc(B4,0),oc(A4,0),oc(E4,0)];
+      var basses=[oc(A4,-2),oc(Gb4,-2),oc(E4,-2),oc(Db4,-1)];
+      var pads=[[oc(A4,-2),oc(Db4,-1),oc(E4,-1)],[oc(Gb4,-2),oc(A4,-2),oc(Db4,-1)],[oc(E4,-2),oc(Ab4,-2),oc(B4,-2)],[oc(Db4,-1),oc(E4,-1),oc(Ab4,-1)]];
+      for(var bar=0;bar<68;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.78);kick(t+b*2.5,0.52);
+        snare(t+b,0.31);snare(t+b*3,0.31);
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,h%2===0?0.10:0.06,h===4);
+        bass(basses[ci],t,b*1.9,0.36);bass(basses[ci],t+b*2,b*1.9,0.30);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.10);
+        for(var n=0;n<8;n++) mTone(mel[(bar*8+n)%16],t+n*b*0.5,b*0.50,n%2===0?0.18:0.11,'triangle',0.025,0.09);
+      }
+    }
+  });
+})();
+
+// ---- 9. Sis Puella Magica! 132bpm ----
+(function(){
+  var bpm=132;
+  var easy=[];
+  var laneSeq=[2,1,3,0,1,3,0,2,0,2,1,3,3,0,2,1];
+  for(var i=0;i<84;i++) easy.push([i, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.5);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.25);
+
+  SONGS.push({id:9,t:'Sis Puella Magica!',a:'Yuki Kajiura (魔法少女小圆)',cat:'anime',ico:'✨',c1:'#e879f9',c2:'#a855f7',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(E4,0),oc(G4,0),oc(B4,0),oc(D4,1), oc(E4,1),oc(D4,1),oc(B4,0),oc(G4,0),
+               oc(A4,0),oc(B4,0),oc(D4,1),oc(E4,1), oc(Gb4,1),oc(E4,1),oc(D4,1),oc(B4,0)];
+      var basses=[oc(E4,-2),oc(A4,-2),oc(D4,-2),oc(B4,-2)];
+      var pads=[[oc(E4,-2),oc(G4,-1),oc(B4,-1)],[oc(A4,-2),oc(C4,-1),oc(E4,-1)],[oc(D4,-2),oc(Gb4,-2),oc(A4,-2)],[oc(B4,-2),oc(D4,-1),oc(Gb4,-1)]];
+      for(var bar=0;bar<65;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.70);kick(t+b*2,0.58);
+        snare(t+b,0.26);snare(t+b*3,0.26);
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,0.07,h===4);
+        bass(basses[ci],t,b*1.9,0.33);bass(basses[ci],t+b*2,b*1.9,0.27);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.12);
+        for(var n=0;n<8;n++) mTone(mel[(bar*8+n)%16],t+n*b*0.5,b*0.53,n%2===0?0.17:0.10,'sine',0.04,0.12);
+      }
+    }
+  });
+})();
+
+// ---- 10. Vampire (Miku) 168bpm ----
+(function(){
+  var bpm=168;
+  var easy=[];
+  var laneSeq=[1,3,0,2,2,0,3,1,0,2,1,3,3,1,0,2];
+  for(var i=0;i<100;i++) easy.push([i*0.5, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.25);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.125);
+
+  SONGS.push({id:10,t:'Vampire (Miku ver.)',a:'初音ミク',cat:'vocaloid',ico:'🧛',c1:'#dc2626',c2:'#7f1d1d',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(D4,0),oc(F4,0),oc(A4,0),oc(C4,1), oc(Bb4,0),oc(A4,0),oc(F4,0),oc(D4,0),
+               oc(Eb4,0),oc(G4,0),oc(Bb4,0),oc(D4,1), oc(C4,1),oc(Bb4,0),oc(G4,0),oc(Eb4,0)];
+      var basses=[oc(D4,-2),oc(Bb4,-2),oc(Eb4,-2),oc(C4,-2)];
+      var pads=[[oc(D4,-1),oc(F4,-1),oc(A4,-1)],[oc(Bb4,-2),oc(D4,-1),oc(F4,-1)],[oc(Eb4,-2),oc(G4,-1),oc(Bb4,-1)],[oc(C4,-2),oc(Eb4,-1),oc(G4,-1)]];
+      for(var bar=0;bar<70;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.84);kick(t+b*1.5,0.48);kick(t+b*2,0.76);kick(t+b*3.5,0.46);
+        snare(t+b,0.36);snare(t+b*3,0.36);
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,h%2===0?0.12:0.07,h===2||h===6);
+        bass(basses[ci],t,b*1.8,0.38);bass(basses[ci],t+b*2,b*1.8,0.32);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.09);
+        for(var n=0;n<8;n++) pluck(mel[(bar*8+n)%16],t+n*b*0.5,b*0.42,n%2===0?0.19:0.12);
+      }
+    }
+  });
+})();
+
+// ---- 11. MORE MORE JUMP! 175bpm ----
+(function(){
+  var bpm=175;
+  var easy=[];
+  var laneSeq=[0,2,1,3,1,3,0,2,2,0,3,1,3,1,2,0];
+  for(var i=0;i<108;i++) easy.push([i*0.5, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.25);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.125);
+
+  SONGS.push({id:11,t:'MORE MORE JUMP!',a:'MORE MORE JUMP!',cat:'vocaloid',ico:'🎀',c1:'#fb7185',c2:'#f43f5e',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(C4,0),oc(E4,0),oc(G4,0),oc(C4,1), oc(B4,0),oc(G4,0),oc(E4,0),oc(C4,0),
+               oc(A4,0),oc(C4,1),oc(E4,1),oc(G4,1), oc(F4,1),oc(E4,1),oc(C4,1),oc(A4,0)];
+      var basses=[oc(C4,-2),oc(A4,-2),oc(F4,-2),oc(G4,-2)];
+      var pads=[[oc(C4,-1),oc(E4,-1),oc(G4,-1)],[oc(A4,-2),oc(C4,-1),oc(E4,-1)],[oc(F4,-2),oc(A4,-2),oc(C4,-1)],[oc(G4,-2),oc(B4,-2),oc(D4,-1)]];
+      for(var bar=0;bar<78;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.84);kick(t+b*1.5,0.46);kick(t+b*2.5,0.60);kick(t+b*3,0.50);
+        snare(t+b,0.35);snare(t+b*3,0.35);
+        for(var h=0;h<16;h++) hh(t+h*b*0.25,h%4===0?0.12:0.07,h%8===4);
+        bass(basses[ci],t,b*1.8,0.37);bass(basses[ci],t+b*2,b*1.8,0.31);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.09);
+        for(var n=0;n<8;n++) pluck(mel[(bar*8+n)%16],t+n*b*0.5,b*0.40,n%2===0?0.20:0.13);
+      }
+    }
+  });
+})();
+
+// ---- 12. Kyuukurarin 155bpm ----
+(function(){
+  var bpm=155;
+  var easy=[];
+  var laneSeq=[1,0,2,3,0,3,1,2,3,1,0,2,2,0,3,1];
+  for(var i=0;i<96;i++) easy.push([i*0.5, laneSeq[i%16]]);
+  var normal=hardenChart(easy,0.5);
+  var hard=hardenChart(normal,0.25);
+  var expert=hardenChart(hard,0.25);
+  var master=hardenChart(expert,0.125);
+
+  SONGS.push({id:12,t:'Kyuukurarin',a:'SEKAI feat. Hatsune Miku',cat:'vocaloid',ico:'🌀',c1:'#38bdf8',c2:'#0ea5e9',bpm:bpm,
+    charts:{easy:easy,normal:normal,hard:hard,expert:expert,master:master},
+    music:function(t0){
+      var b=60/bpm;
+      var mel=[oc(D4,0),oc(F4,0),oc(A4,0),oc(D4,1), oc(C4,1),oc(A4,0),oc(F4,0),oc(D4,0),
+               oc(Bb4,0),oc(D4,1),oc(F4,1),oc(A4,1), oc(G4,1),oc(F4,1),oc(D4,1),oc(Bb4,0)];
+      var basses=[oc(D4,-2),oc(C4,-2),oc(Bb4,-2),oc(A4,-2)];
+      var pads=[[oc(D4,-1),oc(F4,-1),oc(A4,-1)],[oc(C4,-2),oc(E4,-1),oc(G4,-1)],[oc(Bb4,-2),oc(D4,-1),oc(F4,-1)],[oc(A4,-2),oc(C4,-1),oc(E4,-1)]];
+      for(var bar=0;bar<72;bar++){
+        var t=t0+bar*b*4; var ci=bar%4;
+        kick(t,0.82);kick(t+b*2,0.70);
+        snare(t+b,0.33);snare(t+b*3,0.33);
+        if(bar%4===1){snare(t+b*1.5,0.20);}
+        for(var h=0;h<8;h++) hh(t+h*b*0.5,h%2===0?0.11:0.07,h===4);
+        bass(basses[ci],t,b*1.9,0.37);bass(basses[ci],t+b*2,b*1.9,0.31);
+        if(bar%2===0) pad(pads[ci],t,b*8,0.09);
+        for(var n=0;n<8;n++) lead(mel[(bar*8+n)%16],t+n*b*0.5,b*0.44,n%2===0?0.19:0.12);
+      }
+    }
+  });
+})();
+
+// ================================================================
+// STARS
+// ================================================================
+(function(){
+  var c=document.getElementById('stars');
+  for(var i=0;i<70;i++){
+    var s=document.createElement('div');s.className='star';
+    var sz=Math.random()*2+.5;
+    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;animation:twinkle '+(2+Math.random()*3)+'s '+(Math.random()*4)+'s infinite';
+    c.appendChild(s);
+  }
+})();
+
+// ================================================================
+// GAME STATE
+// ================================================================
+var LC=['#ff6b9d','#00d4ff','#c084fc','#4ade80'];
+var NL=4;
+var ss=null,sd='hard',running=false,paused=false,raf=null;
+var pauseStartT=0,totalPauseMs=0;
+var G={score:0,combo:0,maxCombo:0,perf:0,great:0,miss:0,notes:[],fx:[],lp:[false,false,false,false],st:0,dur:0,W:0,H:0,jy:0};
+
+// ================================================================
+// MENU
+// ================================================================
+function renderSongs(cat){
+  var g=document.getElementById('sg');
+  var list=cat==='all'?SONGS:SONGS.filter(function(s){return s.cat===cat;});
+  g.innerHTML='';
+  list.forEach(function(s){
+    var d=document.createElement('div');
+    d.className='sc'+(ss&&ss.id===s.id?' sel':'');
+    d.style.setProperty('--c1',s.c1);d.style.setProperty('--c2',s.c2);
+    var cl={vocaloid:'VOCALOID',anime:'アニメ',jpop:'J-POP'}[s.cat]||s.cat;
+    d.innerHTML='<div class="sc-ico">'+s.ico+'</div>'
+      +'<div class="sc-name">'+s.t+'</div>'
+      +'<div class="sc-art">'+s.a+'</div>'
+      +'<div class="sc-bpm">BPM '+s.bpm+'</div>'
+      +'<span class="sc-tag">'+cl+'</span>';
+    d.onclick=function(){pickSong(s);};
+    g.appendChild(d);
+  });
+}
+function pickSong(s){
+  ss=s;
+  renderSongs(document.querySelector('.ftab.on').dataset.c);
+  var b=document.getElementById('pb');
+  b.disabled=false;b.textContent='▶  PLAY — '+s.t;
+}
+document.getElementById('ftabs').addEventListener('click',function(e){
+  if(!e.target.classList.contains('ftab'))return;
+  document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('on');});
+  e.target.classList.add('on');renderSongs(e.target.dataset.c);
+});
+document.getElementById('drow').addEventListener('click',function(e){
+  if(!e.target.classList.contains('db'))return;
+  document.querySelectorAll('.db').forEach(function(b){b.classList.remove('on');});
+  e.target.classList.add('on');sd=e.target.dataset.d;
+});
+document.getElementById('pb').onclick=function(){if(ss)startGame();};
+
+// ================================================================
+// START GAME
+// ================================================================
+function startGame(){
+  initAC();
+  var lw=document.getElementById('lw');
+  var cv=document.getElementById('cv');
+  var W=lw.getBoundingClientRect().width||lw.offsetWidth||window.innerWidth;
+  var H=lw.getBoundingClientRect().height||lw.offsetHeight||(window.innerHeight-120);
+  var dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  cv.getContext('2d').scale(dpr,dpr);
+
+  G.W=W;G.H=H;G.jy=H-110;
+  G.score=0;G.combo=0;G.maxCombo=0;G.perf=0;G.great=0;G.miss=0;
+  G.fx=[];G.lp=[false,false,false,false];
+
+  // 2-beat lead-in before notes
+  var leadIn=2*(60000/ss.bpm);
+  var pat=ss.charts[sd];
+  G.notes=chartMs(pat,ss.bpm,leadIn);
+
+  var lastT=G.notes.length>0?G.notes[G.notes.length-1].time:60000;
+  G.dur=lastT+4*(60000/ss.bpm);
+  G.st=performance.now();totalPauseMs=0;
+
+  document.getElementById('game').classList.add('on');
+  document.getElementById('ht').textContent=ss.t;
+  document.getElementById('ha').textContent=ss.a;
+  document.getElementById('hs').textContent='0';
+  document.getElementById('hc').textContent='0';
+  document.getElementById('pf').style.width='0%';
+  running=true;paused=false;
+
+  var cv2=document.getElementById('cv');
+  cv2.ontouchstart=tapH;cv2.ontouchend=tapEH;
+  cv2.onmousedown=tapH;cv2.onmouseup=tapEH;
+
+  stopMusic();
+  ss.music(AC.currentTime+0.05);
+
+  if(raf)cancelAnimationFrame(raf);
+  loop();
+}
+
+// ================================================================
+// LOOP
+// ================================================================
+function elapsed(){return performance.now()-G.st-totalPauseMs;}
+function loop(){if(!running)return;if(!paused){tick();draw();}raf=requestAnimationFrame(loop);}
+
+function tick(){
+  var el=elapsed();
+  var fallMs={easy:2200,normal:1700,hard:1250,expert:950,master:680}[sd]||1250;
+  G.notes.forEach(function(n){
+    if(n.hit||n.missed)return;
+    var frac=(el-(n.time-fallMs))/fallMs;
+    n.y=frac*G.jy;
+    if(n.y>G.H+40){n.missed=true;G.miss++;G.combo=0;}
+  });
+  G.fx=G.fx.filter(function(f){f.age++;return f.age<26;});
+  document.getElementById('hs').textContent=G.score.toLocaleString();
+  document.getElementById('hc').textContent=G.combo;
+  document.getElementById('pf').style.width=Math.min(100,(el/G.dur)*100).toFixed(1)+'%';
+  if(el>=G.dur)endGame();
+}
+
+// ================================================================
+// DRAW
+// ================================================================
+function draw(){
+  var cv=document.getElementById('cv');
+  var ctx=cv.getContext('2d');
+  var W=G.W,H=G.H,jy=G.jy,lp=G.lp,lw2=W/NL;
+  var bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#0d0020');bg.addColorStop(1,'#06000f');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  for(var l=0;l<NL;l++){
+    if(l%2===0){ctx.fillStyle='rgba(255,255,255,.015)';ctx.fillRect(l*lw2,0,lw2,H);}
+    if(lp[l]){
+      var pg=ctx.createLinearGradient(l*lw2,H-200,l*lw2,H);
+      pg.addColorStop(0,LC[l]+'00');pg.addColorStop(1,LC[l]+'30');
+      ctx.fillStyle=pg;ctx.fillRect(l*lw2,H-200,lw2,200);
+    }
+  }
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+  for(var i=1;i<NL;i++){ctx.beginPath();ctx.moveTo(i*lw2,0);ctx.lineTo(i*lw2,H);ctx.stroke();}
+
+  G.notes.forEach(function(n){
+    if(n.hit||n.missed||n.y<-60||n.y>H+20)return;
+    var x=n.lane*lw2,nw=lw2-14,nh=22,col=LC[n.lane];
+    ctx.save();ctx.shadowColor=col;ctx.shadowBlur=18;
+    var ng=ctx.createLinearGradient(x+7,0,x+7+nw,0);
+    ng.addColorStop(0,col+'cc');ng.addColorStop(0.45,'#fff');ng.addColorStop(1,col+'cc');
+    ctx.fillStyle=ng;ctx.beginPath();ctx.roundRect(x+7,n.y-nh/2,nw,nh,11);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();
+  });
+
+  for(var l=0;l<NL;l++){
+    var x=l*lw2,cx=x+lw2/2,col=LC[l];
+    var jg=ctx.createLinearGradient(x,0,x+lw2,0);
+    jg.addColorStop(0,'transparent');jg.addColorStop(0.15,col+'cc');jg.addColorStop(0.85,col+'cc');jg.addColorStop(1,'transparent');
+    ctx.fillStyle=jg;ctx.fillRect(x,jy-3,lw2,5);
+    ctx.save();ctx.strokeStyle=col;ctx.lineWidth=3;
+    ctx.globalAlpha=lp[l]?1:0.65;ctx.shadowColor=col;ctx.shadowBlur=lp[l]?22:8;
+    ctx.beginPath();ctx.arc(cx,jy,28,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=lp[l]?0.25:0.07;ctx.fillStyle=col;ctx.fill();
+    ctx.restore();
+    ctx.fillStyle=lp[l]?'rgba(255,255,255,.9)':'rgba(255,255,255,.25)';
+    ctx.font='bold 12px -apple-system,Arial,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(l+1,cx,jy);
+  }
+
+  G.fx.forEach(function(f){
+    var a=1-f.age/26,r=f.age*3;
+    ctx.save();ctx.globalAlpha=a;
+    ctx.strokeStyle=f.c;ctx.lineWidth=2.5;ctx.shadowColor=f.c;ctx.shadowBlur=10;
+    ctx.beginPath();ctx.arc(f.x,f.y,r,0,Math.PI*2);ctx.stroke();
+    for(var p=0;p<7;p++){
+      var ang=(p/7)*Math.PI*2+f.age*0.2,pr=f.age*3.5;
+      ctx.globalAlpha=a*0.8;ctx.beginPath();
+      ctx.arc(f.x+Math.cos(ang)*pr,f.y+Math.sin(ang)*pr,3,0,Math.PI*2);
+      ctx.fillStyle=f.c;ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+// ================================================================
+// INPUT
+// ================================================================
+function getLane(cx){
+  var rect=document.getElementById('cv').getBoundingClientRect();
+  return Math.min(NL-1,Math.max(0,Math.floor((cx-rect.left)/(G.W/NL))));
+}
+function tapH(e){
+  e.preventDefault();if(!running||paused)return;
+  var pts=e.touches?Array.from(e.changedTouches):[e];
+  pts.forEach(function(pt){var l=getLane(pt.clientX);G.lp[l]=true;doHit(l,pt.clientX,pt.clientY);});
+}
+function tapEH(e){
+  e.preventDefault();
+  if(e.touches){G.lp=[false,false,false,false];Array.from(e.touches).forEach(function(pt){G.lp[getLane(pt.clientX)]=true;});}
+  else G.lp[getLane(e.clientX)]=false;
+}
+function doHit(lane,cx,cy){
+  var el=elapsed();
+  var jw={easy:180,normal:150,hard:120,expert:100,master:80}[sd]||120;
+  var best=null,bd=9999;
+  G.notes.forEach(function(n){
+    if(n.hit||n.missed||n.lane!==lane)return;
+    var d=Math.abs(n.time-el);if(d<bd){bd=d;best=n;}
+  });
+  if(!best||bd>jw*1.5)return;
+  best.hit=true;
+  var ncx=lane*(G.W/NL)+(G.W/NL)/2;
+  if(bd<jw*0.33){G.perf++;G.score+=1000+G.combo*3;G.combo++;showFB(cx,cy,'PERFECT','#ffd700');}
+  else if(bd<jw*0.82){G.great++;G.score+=750+G.combo;G.combo++;showFB(cx,cy,'GREAT','#00d4ff');}
+  else{G.great++;G.score+=400;G.combo=0;showFB(cx,cy,'GOOD','#4ade80');}
+  if(G.combo>G.maxCombo)G.maxCombo=G.combo;
+  G.fx.push({x:ncx,y:G.jy,age:0,c:LC[lane]});
+}
+function showFB(x,y,t,c){
+  var el=document.createElement('div');el.className='tfb';el.textContent=t;el.style.color=c;
+  el.style.left=(x-26)+'px';el.style.top=(y-26)+'px';
+  document.body.appendChild(el);setTimeout(function(){el.remove();},520);
+}
+
+// ================================================================
+// PAUSE / QUIT / END
+// ================================================================
+function pauseGame(){if(!running||paused)return;paused=true;pauseStartT=performance.now();if(AC)AC.suspend();document.getElementById('pov').classList.add('on');}
+function resumeGame(){totalPauseMs+=performance.now()-pauseStartT;paused=false;if(AC)AC.resume();document.getElementById('pov').classList.remove('on');}
+function quitGame(){running=false;cancelAnimationFrame(raf);stopMusic();document.getElementById('game').classList.remove('on');document.getElementById('pov').classList.remove('on');}
+function endGame(){
+  running=false;cancelAnimationFrame(raf);stopMusic();
+  document.getElementById('game').classList.remove('on');
+  var s=G.score,p=G.perf,gr=G.great,m=G.miss;
+  var tot=p+gr+m,acc=tot>0?((p+gr*0.7)/tot*100):0;
+  var g='D',gc='#888';
+  if(m===0&&acc>=99.5){g='AP';gc='#fff';}
+  else if(acc>=97){g='S';gc='#ffd700';}
+  else if(acc>=93){g='A';gc='#c084fc';}
+  else if(acc>=85){g='B';gc='#00d4ff';}
+  else if(acc>=70){g='C';gc='#4ade80';}
+  document.getElementById('rg').textContent=g;document.getElementById('rg').style.color=gc;
+  document.getElementById('rs').textContent=s.toLocaleString();
+  document.getElementById('rp').textContent=p;document.getElementById('rgt').textContent=gr;document.getElementById('rm').textContent=m;
+  document.getElementById('rsong').textContent=ss?ss.t+' · '+ss.a:'';
+  document.getElementById('result').classList.add('on');
+}
+function retryGame(){document.getElementById('result').classList.remove('on');startGame();}
+function backMenu(){document.getElementById('result').classList.remove('on');}
+
+// ================================================================
+// KEYBOARD
+// ================================================================
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&running){paused?resumeGame():pauseGame();return;}
+  if(!running||paused)return;
+  var km={d:0,f:1,j:2,k:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};
+  var l=km[e.key];
+  if(l!==undefined){G.lp[l]=true;doHit(l,document.getElementById('cv').getBoundingClientRect().left+(l+0.5)*(G.W/NL),G.jy);}
+});
+document.addEventListener('keyup',function(e){
+  var km={d:0,f:1,j:2,k:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};
+  var l=km[e.key];if(l!==undefined)G.lp[l]=false;
+});
+
+// INIT
+renderSongs('all');
+</script>
+</body>
+</html>
